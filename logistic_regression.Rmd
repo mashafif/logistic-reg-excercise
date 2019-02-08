@@ -1,0 +1,58 @@
+---
+title: "Logistic Regression Excercise"
+author: "Afif"
+date: "February 3, 2019"
+output: github_document
+---
+
+***
+
+##Problem Statement
+
+Use the NH11 data set that we loaded earlier.
+
+1. Use glm to conduct a logistic regression to predict ever worked
+   (everwrk) using age (age_p) and marital status (r_maritl).
+2. Predict the probability of working for each level of marital
+   status.
+
+   Note that the data is not perfectly clean and ready to be modeled. You
+   will need to clean up at least some of the variables before fitting
+   the model.
+
+***
+
+##Solution
+
+First is to load the data, and check the summary the three necessary variables : ever worked (everwrk), age (age_p), and marital status (r_maritl).
+```{r}
+NH11 <- readRDS("NatHealth2011.rds")
+NH11.small <- data.frame(everwrk=NH11$everwrk, age_p=NH11$age_p,r_maritl=NH11$r_maritl)
+summary(NH11.small)
+```
+
+From the summary result above, the dependent variables everwrk has quite a lot of missing datas, and quite a few of unnecessary levels : Refused, Uncertain, and Don't Know. Next step will be to filter out all missing and unnecessary data. 
+```{r}
+#Filter out all levels other than the necessary ones = "1 Yes" and "2 No"
+NH11.small$everwrk <- factor(NH11.small$everwrk, levels=c("1 Yes","2 No")) 
+#Drop unused levels
+NH11.small$r_maritl <- droplevels(NH11.small$r_maritl)
+#Remove observations with missing data
+NH11.small<- NH11.small[!is.na(NH11.small$everwrk), ]
+summary(NH11.small)
+```
+
+Then, to create the logistic regression model using glm model, and examining its summary.
+
+```{r}
+everwrk.log <- glm(everwrk ~ age_p + r_maritl, data=NH11.small, family="binomial")
+summary(everwrk.log)
+
+```
+Lastly, is to actually predict the effect of marital status with chance of a person ever working. For this purpose we will examine the result of Effect () function using plot.
+
+```{r fig.height =6 , fig.width = 6}
+library(effects)
+r_maritl.effect <- Effect("r_maritl", everwrk.log)
+plot(r_maritl.effect,axes=list(grid=FALSE, x=list(cex=0.6,rug = FALSE, rotate=45)))
+```
